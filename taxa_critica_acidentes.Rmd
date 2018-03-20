@@ -1,0 +1,127 @@
+---
+title: "Valor Critico de Acidentes"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+```
+
+## Taxa Crítica de Acidentes
+Este é um exercício para obtenção da taxa crítica de acidentes em cruzamentos.  
+
+Primeiramente é necessário criar a tabela de tipos de acidentes e pesos.  
+
+```{r cars}
+#tipos de Acidentes
+acidente <- c("Danos Materiais", "Com Feridos", "Com Pedestres", "Com Fatais")
+#peso dos acidentes
+nivel_acidente <- c(1, 4, 6, 13)
+#UPS ponderação conforme gravidade do acidente
+ups <- cbind(nivel_acidente, acidente)
+head(ups)
+```
+
+## Base de Dados
+Criamos registros simulados afim de avaliar o algorítimo.  
+De forma randômica criamos registros para cada tipo de acidente e por fim obtemos o número total de assidentes simulados. 
+
+```{r pressure, echo=TRUE}
+#criamos registros simulados
+registros <- rep(c(1,4,6,13), c(sample(1000:5000, 1), sample(500:1500, 1), sample(500:1000, 1), sample(50:200, 1))) 
+registros <- as.data.frame(registros)
+dim(registros)
+```
+Obtemos o número de ocorrencias de cada classe de acidente
+```{r conta, echo=TRUE}
+conta <- c(sum(registros[,1] == 1), sum(registros[,1] == 4), sum(registros[,1] == 6), sum(registros[,1] == 13))
+conta <- cbind(conta, ups)
+conta
+```
+
+Informamos o número de cruzamentos em questão
+
+```{r cruzamentos, echo=TRUE}
+#setamos o numerio de cruzamentos
+ncruz = 120
+```
+
+## Análises
+
+Obtemos o Índice Médio Ponderado:  
+```{r indice medio ponderado, echo=TRUE}
+#obtemos o indice medio ponderado
+ip <- sum(registros) / ncruz
+ip
+
+```
+Definimos o valor de K para alcançar o nível de confiançpa de 95%
+```{r}
+#definimos K para um nível de confiança de 95%
+k <- 1.645
+```
+Definimos orange de exposição. Para isso definimos um intervalo de exposição de 1 a 15000 VDM.
+
+
+```{r}
+exposicao <- c(1:15000)
+exposicao <- as.data.frame(exposicao)
+summary(exposicao)
+```
+Calculamos o Indice Crítico
+```{r}
+exposicao$ic <- 0
+exposicao$exposicao <- as.numeric(exposicao$exposicao)
+exposicao$ic <- ip + k * ( sqrt(ip / exposicao$exposicao) - (0.5 / exposicao$exposicao) )
+```
+
+Plotamos os dados
+```{r}
+library(ggplot2)
+ggplot(exposicao, aes(x=exposicao, y=ic)) +
+  geom_line(colour="green", linetype="dashed", size=1.5) + 
+  geom_point(colour="red", size=1, shape=21, fill="white")
+```
+
+## Para umunico cruzamento
+criamos registro fake
+
+```{r}
+registros <- rep(c(1,4,6,13), c(sample(1:80, 1), sample(1:50, 1), sample(1:30, 1), sample(1:5, 1))) 
+registros <- as.data.frame(registros)
+dim(registros)
+conta <- c(sum(registros[,1] == 1), sum(registros[,1] == 4), sum(registros[,1] == 6), sum(registros[,1] == 13))
+conta <- cbind(conta, ups)
+conta
+#setamos o numerio de cruzamentos
+ncruz = 1
+#obtemos o indicede acidente  medio ponderado
+ip <- sum(registros) / ncruz
+ip
+
+```
+
+definimos K para um nível de confiança de 95%  = 1.645, 99,5% = 2.576 e para 90% = 1.282
+
+```{r}
+k <- 1.645
+exposicao <- c(1:2000)
+exposicao <- as.data.frame(exposicao)
+summary(exposicao)
+```
+
+```{r}
+exposicao$ic <- 0
+exposicao$exposicao <- as.numeric(exposicao$exposicao)
+exposicao$ic <- ip + k * ( sqrt(ip / exposicao$exposicao) - (0.5 / exposicao$exposicao) )
+library(ggplot2)
+ggplot(exposicao, aes(x=exposicao, y=ic)) +
+  geom_line(colour="red", linetype="dashed", size=1.5) + 
+  geom_point(colour="red", size=4, shape=21, fill="white")
+```
+
+
+
+
+
+
